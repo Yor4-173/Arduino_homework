@@ -4,18 +4,17 @@
 #include <BH1750.h>
 #include <Wire.h>
 
-// #define LED1 D3
 #define LED1 D4
 #define LED2 D5
 #define LED3 D6
 #define LED4 D7
 
+#define LED5 D0
+#define BTN A0
+bool state = true;
+
 #define DHTPIN D3
 #define DHTTYPE DHT22  
-
-#define BTN D0
-
-bool state = true;
 
 const char* ssid = "WemosTest";     
 const char* password = "01072003"; 
@@ -51,7 +50,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
         message += (char)payload[i];
     }
     
-    Serial.print("MQTT Received: ");
+    Serial.print("MQTT Received from wemos1: ");
     Serial.print(topic);
     Serial.print(" - Content: ");
     Serial.println(message);
@@ -60,16 +59,17 @@ void callback(char* topic, byte* payload, unsigned int length) {
     digitalWrite(LED4, HIGH);
     delay(500);  
     digitalWrite(LED4, LOW);
+    
     // Xử lý MQTT để bật/tắt LED từ xa
-    // if (String(topic) == "wemos/led") {
-    //     if (message == "ON") {
-    //         digitalWrite(LED4, HIGH);
-    //         state = true;
-    //     } else if (message == "OFF") {
-    //         digitalWrite(LED4, LOW);
-    //         state = false;
-    //     }
-    // }
+    if (String(topic) == "wemos/led") {
+        if (message == "ON") {
+            digitalWrite(LED4, HIGH);
+            state = true;
+        } else if (message == "OFF") {
+            digitalWrite(LED4, LOW);
+            state = false;
+        }
+    }
 }
 
 void reconnect() {
@@ -77,7 +77,8 @@ void reconnect() {
         Serial.print("Connecting to MQTT...");
         if (client.connect(mqtt_client_id)) {
             Serial.println("MQTT connected!");
-            client.subscribe("wemos2/+");
+            client.subscribe("wemos2/sensor");
+            client.subscribe("wemos2/led");
         } else {
             Serial.print("Failed, error code: ");
             Serial.print(client.state());
@@ -150,19 +151,19 @@ void loop() {
     digitalWrite(LED3, HIGH);
 
     // Xử lý nút nhấn để điều khiển LED và gửi trạng thái lên MQTT
-    // if (digitalRead(BTN) == LOW) {
-    //     delay(200);
-    //     if (state) {
-    //         digitalWrite(LED4, HIGH);
-    //         client.publish("wemos/led1", "ON");
-    //         state = false;
-    //     } else {
-    //         digitalWrite(LED4, LOW);
-    //         client.publish("wemos/led1", "OFF");
-    //         state = true;
-    //     }
-    //     while (digitalRead(BTN) == LOW);
-    // }
+    if (digitalRead(BTN) == LOW) {
+        delay(200);
+        if (state) {
+            digitalWrite(LED4, HIGH);
+            client.publish("wemos/led1", "ON");
+            state = false;
+        } else {
+            digitalWrite(LED4, LOW);
+            client.publish("wemos/led1", "OFF");
+            state = true;
+        }
+        while (digitalRead(BTN) == LOW);
+    }
 
     delay(5000);
 }
