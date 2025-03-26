@@ -4,7 +4,6 @@
 #include <BH1750.h>
 #include <Wire.h>
 
-// #define LED1 D3
 #define LED1 D4
 #define LED2 D5
 #define LED3 D6
@@ -13,12 +12,9 @@
 #define DHTPIN D3
 #define DHTTYPE DHT22  
 
-#define BTN D0
-
+#define BTN A0
+#define LED5 D0
 bool state = true;
-
-// const char* ssid = "UiTiOt-E3.1";     
-// const char* password = "UiTiOtAP"; 
 
 const char* ssid = "WemosTest";     
 const char* password = "01072003"; 
@@ -54,7 +50,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
         message += (char)payload[i];
     }
     
-    Serial.print("MQTT Received: ");
+    Serial.print("MQTT Received wemos2: ");
     Serial.print(topic);
     Serial.print(" - Content: ");
     Serial.println(message);
@@ -64,16 +60,16 @@ void callback(char* topic, byte* payload, unsigned int length) {
     delay(500);  
     digitalWrite(LED4, LOW);
 
-    // Xử lý MQTT để bật/tắt LED từ xa
-    // if (String(topic) == "wemos/led") {
-    //     if (message == "ON") {
-    //         digitalWrite(LED4, HIGH);
-    //         state = true;
-    //     } else if (message == "OFF") {
-    //         digitalWrite(LED4, LOW);
-    //         state = false;
-    //     }
-    // }
+    Xử lý MQTT để bật/tắt LED từ xa
+    if (String(topic) == "wemos2/led") {
+        if (message == "ON") {
+            digitalWrite(LED4, HIGH);
+            state = true;
+        } else if (message == "OFF") {
+            digitalWrite(LED4, LOW);
+            state = false;
+        }
+    }
 }
 
 void reconnect() {
@@ -81,7 +77,8 @@ void reconnect() {
         Serial.print("Connecting to MQTT...");
         if (client.connect(mqtt_client_id)) {
             Serial.println("MQTT connected!");
-            client.subscribe("wemos1/+");
+            client.subscribe("wemos1/sensor");
+            client.subscribe("wemos1/led");
         } else {
             Serial.print("Failed, error code: ");
             Serial.print(client.state());
@@ -147,34 +144,25 @@ void loop() {
     }
 
     // Gửi dữ liệu cảm biến lên MQTT
-    char humidity_str[8];
-    sprintf(humidity_str, "%.2f%%", h);
-    client.publish("wemos2/humanity", humidity_str);
-
-    char temperature_str[8];
-    sprintf(temperature_str, "%.2fC", t);
-    client.publish("wemos2/temperature", temperature_str);
-
-    char light_str[8];
-    sprintf(light_str, "%.2flx", lux);
-    client.publish("wemos2/light", light_str);
+    char payload[50];
+    sprintf(payload, "{\"humidity\": %.2f, \"temperature\": %.2f, \"light\": %.2f}", h, t, lux);
+    client.publish("wemos2/sensor", payload);
 
     digitalWrite(LED3, HIGH);
 
     // Xử lý nút nhấn để điều khiển LED và gửi trạng thái lên MQTT
-    // if (digitalRead(BTN) == LOW) {
-    //     delay(200);
-    //     if (state) {
-    //         digitalWrite(LED4, HIGH);
-    //         client.publish("wemos/led1", "ON");
-    //         state = false;
-    //     } else {
-    //         digitalWrite(LED4, LOW);
-    //         client.publish("wemos/led1", "OFF");
-    //         state = true;
-    //     }
-    //     while (digitalRead(BTN) == LOW);
-    // }
-
+    if (digitalRead(BTN) == LOW) {
+        delay(200);
+        if (state) {
+            digitalWrite(LED4, HIGH);
+            client.publish("wemos1/led", "ON");
+            state = false;
+        } else {
+            digitalWrite(LED4, LOW);
+            client.publish("wemos1/led", "OFF");
+            state = true;
+        }
+        while (digitalRead(BTN) == LOW);
+    }
     delay(5000);
 }
