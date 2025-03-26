@@ -155,11 +155,11 @@ void loop() {
         delay(200);
         if (state) {
             digitalWrite(LED4, HIGH);
-            client.publish("wemos/led1", "ON");
+            client.publish("wemos2/led", "ON");
             state = false;
         } else {
             digitalWrite(LED4, LOW);
-            client.publish("wemos/led1", "OFF");
+            client.publish("wemos2/led", "OFF");
             state = true;
         }
         while (digitalRead(BTN) == LOW);
