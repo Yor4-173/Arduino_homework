@@ -9,12 +9,17 @@
 #define LED3 D6
 #define LED4 D7
 
-#define LED5 D0
-#define BTN A0
+#define LED5 D8
+#define BTN D0
 bool state = true;
 
 #define DHTPIN D3
 #define DHTTYPE DHT22  
+
+bool ledState = false;  // Trạng thái LED
+bool buttonPressed = false;
+unsigned long buttonPressTime = 0;  // Lưu thời điểm bắt đầu nhấn
+const long holdTime = 3000; 
 
 const char* ssid = "WemosTest";     
 const char* password = "01072003"; 
@@ -50,7 +55,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
         message += (char)payload[i];
     }
     
-    Serial.print("MQTT Received from wemos1: ");
+    Serial.print("MQTT Received from wemos2: ");
     Serial.print(topic);
     Serial.print(" - Content: ");
     Serial.println(message);
@@ -63,11 +68,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
     // Xử lý MQTT để bật/tắt LED từ xa
     if (String(topic) == "wemos/led") {
         if (message == "ON") {
-            digitalWrite(LED4, HIGH);
-            state = true;
+            digitalWrite(LED5, HIGH);
+            ledState = true;
         } else if (message == "OFF") {
-            digitalWrite(LED4, LOW);
-            state = false;
+            digitalWrite(LED5, LOW);
+            ledState = false;
         }
     }
 }
@@ -78,7 +83,7 @@ void reconnect() {
         if (client.connect(mqtt_client_id)) {
             Serial.println("MQTT connected!");
             client.subscribe("wemos2/sensor");
-            client.subscribe("wemos2/led");
+            client.subscribe("wemos/led");
         } else {
             Serial.print("Failed, error code: ");
             Serial.print(client.state());
@@ -99,6 +104,7 @@ void setup() {
     pinMode(LED2, OUTPUT);
     pinMode(LED3, OUTPUT);
     pinMode(LED4, OUTPUT);
+    pinMode(LED5, OUTPUT);
     pinMode(BTN, INPUT_PULLUP);
 
     dht.begin();
@@ -114,6 +120,27 @@ void loop() {
         reconnect();
     }
     client.loop();
+
+        bool buttonState = digitalRead(BTN);
+    if (buttonState == HIGH) {  
+        if (!buttonPressed) {  
+            buttonPressed = true;  
+            buttonPressTime = millis();  
+        } 
+        // Nếu giữ nút >= 1 giây thì đổi trạng thái LED
+        else if (millis() - buttonPressTime >= holdTime) {  
+            ledState = !ledState;  
+            digitalWrite(LED5, ledState ? HIGH : LOW);
+            Serial.print("LED ");
+            Serial.println(ledState ? "ON" : "OFF");
+            client.publish("wemos/led", ledState ? "ON" : "OFF");
+            buttonPressed = false;  
+        }
+    } 
+    else {  
+        buttonPressed = false; 
+    }
+     
     
     float h = dht.readHumidity();
     float t = dht.readTemperature();
@@ -131,39 +158,23 @@ void loop() {
     Serial.print(lux);
     Serial.println(" lx");
 
-    digitalWrite(LED1, HIGH);
+    digitalWrite(LED1, LOW);
     digitalWrite(LED2, HIGH);
     digitalWrite(LED3, LOW);
 
     if (lux <= 50) {
-        digitalWrite(LED1, LOW);
+        digitalWrite(LED1, HIGH);
     }
     if (h >= 60 && h <= 70 && t >= 23 && t <= 28) {
         digitalWrite(LED2, LOW);
-        digitalWrite(LED3, LOW);
     }
 
     // Gửi dữ liệu cảm biến lên MQTT
     char payload[50];
     sprintf(payload, "{\"humidity\": %.2f, \"temperature\": %.2f, \"light\": %.2f}", h, t, lux);
     client.publish("wemos1/sensor", payload);
-
     digitalWrite(LED3, HIGH);
 
-    // Xử lý nút nhấn để điều khiển LED và gửi trạng thái lên MQTT
-    if (digitalRead(BTN) == LOW) {
-        delay(200);
-        if (state) {
-            digitalWrite(LED4, HIGH);
-            client.publish("wemos2/led", "ON");
-            state = false;
-        } else {
-            digitalWrite(LED4, LOW);
-            client.publish("wemos2/led", "OFF");
-            state = true;
-        }
-        while (digitalRead(BTN) == LOW);
-    }
 
-    delay(5000);
+    delay(3000);
 }
