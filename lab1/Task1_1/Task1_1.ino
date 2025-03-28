@@ -1,7 +1,6 @@
 #include "DHT.h"
 #include <BH1750.h>
 #include <Wire.h>
-#include "LiquidCrystal_I2C.h"
 #include "Arduino.h"
 
 #define LED1 2
@@ -13,7 +12,6 @@
 
 DHT dht(DHTPIN, DHTTYPE);
 BH1750 lightMeter;
-LiquidCrystal_I2C lcd(0x27, 16, 2); // Địa chỉ I2C có thể là 0x3F hoặc 0x27
 
 void setup() {
 
