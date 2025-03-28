@@ -1,16 +1,16 @@
 #include <Wire.h>
-#include <LiquidCrystal.h>
+#include <LiquidCrystal_I2C.h>
 #include <MFRC522.h>
 #include <SPI.h>
 #include <Keypad.h>
 
-#define RED_LED D5
-#define GREEN_LED D6
+#define RED_LED 5
+#define GREEN_LED 6
 
 #define SS_PIN 10
 #define RST_PIN 9
 
-LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
 const byte ROWS = 4;

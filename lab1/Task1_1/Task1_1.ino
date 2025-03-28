@@ -1,21 +1,22 @@
-#include <DHT.h>
+#include "DHT.h"
 #include <BH1750.h>
 #include <Wire.h>
-#include <LiquidCrystal.h>
+#include "LiquidCrystal_I2C.h"
+#include "Arduino.h"
 
-#define LED1 D2
-#define LED2 D3
-#define LED3 D4
+#define LED1 2
+#define LED2 3
+#define LED3 4
 
-#define DHTPIN A2
+#define DHTPIN 5
 #define DHTTYPE DHT22  
 
 DHT dht(DHTPIN, DHTTYPE);
 BH1750 lightMeter;
-LiquidCrystal lcd(7, 8, 9, 10, 11, 12)
-
+LiquidCrystal_I2C lcd(0x27, 16, 2); // Địa chỉ I2C có thể là 0x3F hoặc 0x27
 
 void setup() {
+
   Serial.begin(9600);
 
   pinMode(LED1, OUTPUT);
@@ -23,20 +24,12 @@ void setup() {
   pinMode(LED3, OUTPUT);
 
   dht.begin();
-  Wire.begin(A4, A5);
+  Wire.begin();
   lightMeter.begin();
-
-  lcd.begin(16, 2);
-  lcd.setCursor(0, 0);
-  lcd.print("Initializing...");
-  delay(2000);
-  lcd.clear();
-
   Serial.println(F("BH1750 Test begin"));
 }
 
 void loop() {
-
   digitalWrite(LED1, LOW);
   digitalWrite(LED2, LOW);
   digitalWrite(LED3, LOW);
@@ -45,38 +38,24 @@ void loop() {
   float t = dht.readTemperature();
   float lux = lightMeter.readLightLevel();
 
-  if (lux <= 50){
+
+  if (lux <= 50) {
     digitalWrite(LED1, HIGH);
   }
-  if ( 60 <= h <= 70 ){
+  if (t <= 23 || t >= 28) {
     digitalWrite(LED2, HIGH);
   }
-  if (23 <= t <= 28){
+  if (h <= 60 || h >= 70) {
     digitalWrite(LED3, HIGH);
   }
-
 
   Serial.print(F("Humidity: "));
   Serial.print(h);
   Serial.print(F("%  Temperature: "));
   Serial.print(t);
-  Serial.print("Light: ");
+  Serial.print(F("C Light: "));
   Serial.print(lux);
-  Serial.println(" lx");
+  Serial.println(F(" lx"));
 
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("H:");
-  lcd.print(h);
-  lcd.print("% T:");
-  lcd.print(t);
-  lcd.print("C");
-  
-  // lcd.setCursor(0, 1);
-  // lcd.print("Light:");
-  // lcd.print(lux);
-  // lcd.print(" lx");
-  
-  delay(3000);
-
+  delay(5000);
 }
