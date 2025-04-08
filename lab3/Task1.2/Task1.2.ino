@@ -6,8 +6,13 @@
 #define LED3 D7
 #define BTN D8
 
+bool state = true;
+int value = 0;
 
-int value = 0; 
+
+bool ledState1 = false;
+bool ledState2 = false; 
+bool ledState3 = false;  
 
  // Trạng thái LED
 bool buttonPressed = false;
@@ -20,7 +25,7 @@ const char* password = "01072003";
 const char* mqtt_server = "192.168.43.40";  
 const int mqtt_port = 1883;
 
-const char* mqtt_user = "wemos1";
+const char* mqtt_user = "wemos2";
 const char* mqtt_password = "admin123";
 
 WiFiClient espClient;
@@ -65,19 +70,17 @@ if (String(topic) == "wemos/led") {
     } else if (message == "LED2") {
         digitalWrite(LED2, HIGH);
         value = 2;
-
     } else if (message == "LED3") {
         digitalWrite(LED3, HIGH);
         value = 0;
     }
-    delay(500);
 }
 }
 
 void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
-    if (client.connect("wemos1", mqtt_user, mqtt_password)) {
+    if (client.connect("wemos2", mqtt_user, mqtt_password)) {
       Serial.println("Connected to MQTT Broker!");
       client.subscribe("wemos/led");  
     } else {
@@ -100,25 +103,25 @@ void setup() {
   pinMode(LED3, OUTPUT);
   pinMode(BTN, INPUT_PULLUP);
 
-}
-
+  }
 void loop() {
   if (!client.connected()) {
     reconnect();
   }
   client.loop();
 
-bool buttonState = digitalRead(BTN);
-// Serial.println(buttonState);
 
-if (buttonState == HIGH) {  // Nhấn nút
-    if (!buttonPressed) {  
-        buttonPressed = true;
-        buttonPressTime = millis();
-    } 
-    else if (millis() - buttonPressTime >= holdTime) {  
+  bool buttonState = digitalRead(BTN);
+  // Serial.println(buttonState);
 
-        if (value == 0) {
+  if (buttonState == HIGH) {  // Nhấn nút
+      if (!buttonPressed) {  
+          buttonPressed = true;
+          buttonPressTime = millis();
+      } 
+      else if (millis() - buttonPressTime >= holdTime) {  
+
+          if (value == 0) {
               client.publish("wemos/led", "LED1");
               value += 1;
               Serial.print("Value: ");
@@ -137,10 +140,10 @@ if (buttonState == HIGH) {  // Nhấn nút
               Serial.println(value);
           }
 
-        buttonPressed = false;  // Reset trạng thái sau khi đã đổi LED
-    }
-} else {  
-    buttonPressed = false;
-}
+          buttonPressed = false;  // Reset trạng thái sau khi đã đổi LED
+      }
+  } else {  
+      buttonPressed = false;
+  }
   delay(1000);
 }

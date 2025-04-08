@@ -77,9 +77,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
 void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
-    if (client.connect("WemosClient1")) {
+    if (client.connect("WemosClient2")) {
       Serial.println("Connected to MQTT Broker!");
-      client.subscribe("wemos2/sensor");  
+      client.subscribe("wemos1/sensor");  
     } else {
       Serial.print("Failed, rc=");
       Serial.print(client.state());
@@ -111,7 +111,7 @@ void sendMessage(float h, float t, float lux) {
   uint16_t encryptedLength = aesLib.encrypt64((byte*)json, strlen(json), encrypted, aes_key, 256, aes_iv);
 
   String base64Encoded = base64::encode((uint8_t*)encrypted, encryptedLength);
-  client.publish("wemos1/sensor", base64Encoded.c_str());
+  client.publish("wemos2/sensor", base64Encoded.c_str());
 }
 
 String decryptPayload(String base64Input) {
