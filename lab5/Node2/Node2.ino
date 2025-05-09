@@ -9,7 +9,7 @@ const char* password = "01072003";
 
 const char* thingsboardServer = "192.168.43.40";
 const int thingsboardPort = 1883;
-const char* accessToken = "ti0v70ox6a118jrm0mph";
+const char* accessToken = "f9D8WiWViB1PwnS7DKBN";
 
 #define GPIO2 D4
 #define GPIO14 D5

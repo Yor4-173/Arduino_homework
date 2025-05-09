@@ -8,7 +8,7 @@ const char* password = "01072003";
 
 const char* thingsboardServer = "192.168.43.40";
 const int thingsboardPort = 1883;
-const char* accessToken = "ze8vxz8u3yi8lhc0et7k";
+const char* accessToken = "awif0uouxnxr7lbyzxlw";
 
 
 #define DHTPIN D5
